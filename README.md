@@ -44,3 +44,14 @@ Ensure your Lightning node's gRPC interface is accessible and configure the path
 Run the bot:
 
 python lightning_bot.py
+
+Support the Project
+If you find this Telegram Lightning Network bot useful and would like to support its development, consider making a donation. Your contributions will help cover development costs, hosting, and other expenses related to maintaining and improving this project.
+
+How to Donate
+
+Bitcoin (BTC): bc1q282pz0tkx0a8c96jgg5ms7mmjaxvd5gvww0rdk
+
+Lightning Network: asyscom@sats.mobi
+
+Thank you for your support!
