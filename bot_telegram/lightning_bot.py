@@ -8,8 +8,8 @@ import time
 from threading import Thread
 
 # Configura il token API di Telegram
-TELEGRAM_TOKEN = '7349518464:AAEV2CbxNtqzbw9tr821M8AQtV_ic81cExM'
-CHAT_ID = '361305683'
+TELEGRAM_TOKEN = 'TOKEN_BOT
+CHAT_ID = 'YOUR CHAT ID'
 
 # Configura il canale di comunicazione con LND su RaspiBlitz
 LND_DIR = '/mnt/hdd/app-data/lnd/'
