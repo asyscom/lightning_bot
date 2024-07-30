@@ -1,4 +1,4 @@
-Certainly! Here's the README description translated into English:
+
 
 ---
 
