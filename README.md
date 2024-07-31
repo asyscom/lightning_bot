@@ -1,95 +1,110 @@
 
 
----
+# Lightning Node Telegram Bot
 
-# Telegram Lightning Node Monitor Bot
+This Telegram bot integrates with a Lightning Network Daemon (LND) node to provide real-time updates and information about the node's status, channels, transactions, and more. It is built using Python and the `python-telegram-bot` library along with gRPC for communication with the LND node.
 
-## Description
+## Features
 
-This Telegram bot is designed to monitor and manage a Lightning Network node, providing real-time updates and details about various aspects of the node. It uses the `python-telegram-bot` library for integration with Telegram and `grpc` for communication with the Lightning node.
+- **Node Info**: Retrieve and display detailed information about the LND node, including its alias, version, block height, on-chain balance, Lightning balance, and system metrics (CPU usage, memory, disk space, and CPU temperature).
+- **Channel Info**: Get information about the Lightning channels, including their capacities and balances.
+- **Recent Transactions**: Fetch and display recent on-chain transactions and Lightning invoices.
+- **Routing Transactions**: Display recent Lightning routing transactions.
+- **Monitoring**: Continuously monitor and notify about:
+  - New on-chain transactions.
+  - Settled Lightning invoices.
+  - Changes in the status of Lightning channels.
 
-### Key Features
+## Setup
 
-1. **Node Info**:
-   - Displays detailed information about the node, including:
-     - Node alias
-     - Software version
-     - Bitcoin block height
-     - On-chain balance (total and confirmed)
-     - Lightning balance (sum of local channel balances)
-     - Total number of channels
-     - System information such as CPU usage, free memory, and free SSD disk space
+### Prerequisites
 
-2. **Channel Info**:
-   - Shows a list of open Lightning channels with:
-     - Channel name
-     - Channel capacity
-     - Local and remote balances
-
-3. **Recent Transactions**:
-   - Displays the latest 10 transactions, both on-chain and Lightning:
-     - On-chain transactions: transaction hash and amount
-     - Lightning invoices: memo and amount paid
-
-4. **Notifications**:
-   - **On-chain Transactions**: Alerts when a new on-chain transaction is detected.
-   - **Lightning Invoices**: Alerts when a Lightning payment is received.
-   - **Channels**: Alerts when a channel goes offline.
-   - **Routing**: Notifies when the node routes a transaction.
-
-### Requirements
-
-- Python 3.7+
-- `python-telegram-bot`
-- `grpcio`
-- `psutil`
-- Certificate and macaroon files from LND for authentication
-
-### Configuration
-
-1. **Telegram Bot Token**: Insert the Telegram bot token into the code.
-2. **LND Configuration**: Configure the paths for the certificate and macaroon files for LND.
-3. **Chat ID**: Specify the Telegram chat ID for receiving notifications.
+- Python 3.8+
+- Telegram Bot API Token
+- LND Node with gRPC enabled
+- Properly configured TLS certificates and macaroon files
 
 ### Installation
 
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/your-username/telegram-lightning-node-monitor-bot.git
-   ```
+1. **Clone the Repository:**
 
-2. Navigate to the project directory:
-   ```bash
-   cd telegram-lightning-node-monitor-bot
-   ```
+    ```bash
+    git clone https://github.com/yourusername/your-repo.git
+    cd your-repo
+    ```
 
-3. Install the required dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+2. **Install Dependencies:**
 
-4. Configure the variables in the code (`TELEGRAM_TOKEN`, `CHAT_ID`, `CERT_PATH`, `MACAROON_PATH`).
+    Ensure you have `python-telegram-bot` and `grpcio` installed. You can install them using pip:
 
-5. Run the bot:
-   ```bash
-   python bot_telegram.py
-   ```
+    ```bash
+    pip install python-telegram-bot grpcio
+    ```
 
-### Usage Example
+3. **Configuration:**
 
-Once started, the bot will connect to Telegram and be ready to receive commands. Use the `/start` command to view the main menu and interact with the various available options.
+    Edit the script to set the appropriate values for:
+    
+    - `TELEGRAM_TOKEN`: Your Telegram bot API token.
+    - `CHAT_ID`: The chat ID where the bot will send messages.
+    - `LND_DIR`: Path to the directory containing your LND data (`tls.cert` and `admin.macaroon`).
 
-### Contributing
+    ```python
+    TELEGRAM_TOKEN = 'your-telegram-bot-token'
+    CHAT_ID = 'your-chat-id'
+    LND_DIR = '/path/to/your/lnd/data/'
+    ```
 
-If you would like to contribute to the project, please submit a pull request or open an issue to discuss new features or bugs.
+4. **Run the Bot:**
 
-### License
+    Execute the script to start the bot:
+
+    ```bash
+    python lightning_bot.py
+    ```
+
+## Commands
+
+- `/start`: Start the bot and display the main menu.
+- `/menu`: Display the main menu.
+
+### Inline Keyboard Options
+
+- **⚡ Node Info**: Displays detailed information about the node.
+- **📊 Channel Info**: Shows information about Lightning channels.
+- **🔄 Recent Transactions**: Lists recent on-chain transactions and Lightning invoices.
+- **🔄 Routing Transactions**: Provides details on recent routing transactions.
+
+## Monitoring
+
+The bot also continuously monitors:
+
+- **On-chain Transactions**: Alerts you to new on-chain transactions.
+- **Lightning Invoices**: Notifies you when a Lightning invoice is settled.
+- **Lightning Channels**: Sends alerts if a monitored Lightning channel goes offline.
+
+## Troubleshooting
+
+- Ensure the paths to the TLS certificate and macaroon file are correct.
+- Verify that the `lncli` command-line tool works with your LND setup.
+- Check that the Telegram bot token and chat ID are correctly set.
+
+## Logging
+
+The bot logs errors and important information to the console. Ensure that the logging level is set to `INFO` or higher to capture all relevant events.
+
+## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
+## Contributing
+
+Feel free to open issues or submit pull requests if you have suggestions for improvements or fixes.
+
 ---
 
-Feel free to adjust the information to better fit your project and specific setup.
+Feel free to customize the README as needed for your specific use case and repository.
+
 How to Donate
 
 Bitcoin (BTC): bc1q282pz0tkx0a8c96jgg5ms7mmjaxvd5gvww0rdk
