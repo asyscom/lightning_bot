@@ -1,109 +1,85 @@
-
-
-# Lightning Node Telegram Bot
-
-This Telegram bot integrates with a Lightning Network Daemon (LND) node to provide real-time updates and information about the node's status, channels, transactions, and more. It is built using Python and the `python-telegram-bot` library along with gRPC for communication with the LND node.
-
-## Features
-
-- **Node Info**: Retrieve and display detailed information about the LND node, including its alias, version, block height, on-chain balance, Lightning balance, and system metrics (CPU usage, memory, disk space, and CPU temperature).
-- **Channel Info**: Get information about the Lightning channels, including their capacities and balances.
-- **Recent Transactions**: Fetch and display recent on-chain transactions and Lightning invoices.
-- **Routing Transactions**: Display recent Lightning routing transactions.
-- **Monitoring**: Continuously monitor and notify about:
-  - New on-chain transactions.
-  - Settled Lightning invoices.
-  - Changes in the status of Lightning channels.
-
-## Setup
-
-### Prerequisites
-
-- Python 3.8+
-- Telegram Bot API Token
-- LND Node with gRPC enabled
-- Properly configured TLS certificates and macaroon files
-
-### Installation
-
-1. **Clone the Repository:**
-
-    ```bash
-    git clone https://github.com/yourusername/your-repo.git
-    cd your-repo
-    ```
-
-2. **Install Dependencies:**
-
-    Ensure you have `python-telegram-bot` and `grpcio` installed. You can install them using pip:
-
-    ```bash
-    pip install python-telegram-bot grpcio
-    ```
-
-3. **Configuration:**
-
-    Edit the script to set the appropriate values for:
-    
-    - `TELEGRAM_TOKEN`: Your Telegram bot API token.
-    - `CHAT_ID`: The chat ID where the bot will send messages.
-    - `LND_DIR`: Path to the directory containing your LND data (`tls.cert` and `admin.macaroon`).
-
-    ```python
-    TELEGRAM_TOKEN = 'your-telegram-bot-token'
-    CHAT_ID = 'your-chat-id'
-    LND_DIR = '/path/to/your/lnd/data/'
-    ```
-
-4. **Run the Bot:**
-
-    Execute the script to start the bot:
-
-    ```bash
-    python lightning_bot.py
-    ```
-
-## Commands
-
-- `/start`: Start the bot and display the main menu.
-- `/menu`: Display the main menu.
-
-### Inline Keyboard Options
-
-- **⚡ Node Info**: Displays detailed information about the node.
-- **📊 Channel Info**: Shows information about Lightning channels.
-- **🔄 Recent Transactions**: Lists recent on-chain transactions and Lightning invoices.
-- **🔄 Routing Transactions**: Provides details on recent routing transactions.
-
-## Monitoring
-
-The bot also continuously monitors:
-
-- **On-chain Transactions**: Alerts you to new on-chain transactions.
-- **Lightning Invoices**: Notifies you when a Lightning invoice is settled.
-- **Lightning Channels**: Sends alerts if a monitored Lightning channel goes offline.
-
-## Troubleshooting
-
-- Ensure the paths to the TLS certificate and macaroon file are correct.
-- Verify that the `lncli` command-line tool works with your LND setup.
-- Check that the Telegram bot token and chat ID are correctly set.
-
-## Logging
-
-The bot logs errors and important information to the console. Ensure that the logging level is set to `INFO` or higher to capture all relevant events.
-
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
-## Contributing
-
-Feel free to open issues or submit pull requests if you have suggestions for improvements or fixes.
+Got it! Here's the updated README with the correct repository URL:
 
 ---
 
-Feel free to customize the README as needed for your specific use case and repository.
+# Lightning Node Telegram Bot
+
+## Overview
+
+The Lightning Node Telegram Bot is a Python-based bot that interfaces with your Lightning Network Daemon (LND) to provide real-time updates and management capabilities through Telegram. It allows you to monitor various aspects of your Lightning node, including channel status, on-chain transactions, forwarding transactions, and Lightning invoices.
+
+## Features
+
+- **Channel Monitoring**: Alerts you when a channel goes offline or comes back online.
+- **On-Chain Transaction Monitoring**: Notifies you of new on-chain transactions.
+- **Lightning Invoice Monitoring**: Provides notifications for received Lightning payments.
+- **Forwarding Transaction Monitoring**: Keeps track of forwarding transactions and notifies you of new events.
+
+## Installation
+
+### Prerequisites
+
+- **Python 3.11 or higher**
+- **gRPC Python library** (`grpcio` and `grpcio-tools`)
+- **Python Telegram Bot library** (`python-telegram-bot`)
+- **psutil** (for system information)
+
+### Setup
+
+1. **Clone the Repository**
+
+   ```bash
+   git clone https://github.com/asyscom/lightning_bot.git
+   cd lightning_bot
+   ```
+
+2. **Install Dependencies**
+
+   Create a virtual environment and install the required packages:
+
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+   pip install -r requirements.txt
+   ```
+
+3. **Configuration**
+
+   - Update the `TELEGRAM_TOKEN` and `CHAT_ID` with your Telegram bot token and chat ID.
+   - Configure the path to your LND directory, TLS certificate, and macaroon in the `LND_DIR`, `CERT_PATH`, and `MACAROON_PATH` variables respectively.
+
+4. **Run the Bot**
+
+   Start the bot with:
+
+   ```bash
+   python bot_telegram.py
+   ```
+
+## Usage
+
+- **/start**: Initiates interaction with the bot and shows the main menu.
+- **/menu**: Displays a menu with options to view node information, channel details, recent transactions, and forwarding transactions.
+
+### Menu Options
+
+- **⚡ Node Info**: Displays information about the Lightning node, including version, block height, balances, and system metrics.
+- **📊 Channel Info**: Lists details of all channels including capacity and balances.
+- **🔄 Recent Transactions**: Shows recent on-chain transactions and Lightning invoices.
+- **🔄 Forwarding Transactions**: Lists recent forwarding transactions with detailed information.
+
+## Notes
+
+- The bot continuously monitors your node and sends notifications for new forwarding transactions, changes in channel status, on-chain transactions, and Lightning payments.
+- Ensure your bot has appropriate permissions and your Telegram bot token and chat ID are correctly configured.
+
+## Troubleshooting
+
+- **If the bot is not responding**: Ensure the LND gRPC interface is accessible and the paths to the certificate and macaroon are correct.
+- **Notification issues**: Check the Telegram bot token and chat ID configurations.
+
+---
+
 
 How to Donate
 
