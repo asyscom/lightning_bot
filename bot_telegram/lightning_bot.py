@@ -10,13 +10,13 @@ from telegram.ext import Application, CommandHandler, CallbackQueryHandler
 from lightning_pb2 import (
     GetInfoRequest, WalletBalanceRequest, ListChannelsRequest,
     ListInvoiceRequest, GetTransactionsRequest, InvoiceSubscription,
-    ListPaymentsRequest
+    ListPaymentsRequest, ForwardingHistoryRequest
 )
 from lightning_pb2_grpc import LightningStub
 
 # Configura il token API di Telegram
-TELEGRAM_TOKEN = 'TOKEN_API_BOT'
-CHAT_ID = 'YUOR_CHAT_ID'
+TELEGRAM_TOKEN = 'YOUR_TELEGRAM_BOT_TOKEN'
+CHAT_ID = 'YOUR_CHAT_ID'
 
 # Configura il canale di comunicazione con LND su RaspiBlitz
 LND_DIR = '/mnt/hdd/app-data/lnd/'
@@ -65,7 +65,7 @@ async def show_menu(update: Update):
         [InlineKeyboardButton("⚡ Node Info", callback_data='nodeinfo')],
         [InlineKeyboardButton("📊 Channel Info", callback_data='channelinfo')],
         [InlineKeyboardButton("🔄 Recent Transactions", callback_data='recenttransactions')],
-        [InlineKeyboardButton("🔄 Routing Transactions", callback_data='routingtransactions')],
+        [InlineKeyboardButton("🔄 Forwarding Transactions", callback_data='forwardingtransactions')],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text('🤖 Bot active! Select an option:', reply_markup=reply_markup)
@@ -80,8 +80,8 @@ async def button(update: Update, context):
         await get_channel_info(query)
     elif query.data == 'recenttransactions':
         await get_recent_transactions(query)
-    elif query.data == 'routingtransactions':
-        await get_routing_transactions(query)
+    elif query.data == 'forwardingtransactions':
+        await get_forwarding_transactions(query)
 
 async def get_node_info(update):
     try:
@@ -170,21 +170,23 @@ async def get_recent_transactions(update):
         logging.error(f"gRPC error while getting recent transactions: {e.details()}")
         await update.message.reply_text(f"Errore nel recuperare le transazioni recenti: {e.details()}")
 
-async def get_routing_transactions(update):
+async def get_forwarding_transactions(update):
     try:
         stub = get_ln_stub()
-        response = stub.ListPayments(ListPaymentsRequest())
-        routing_info = "\n".join([
-            f"🔄 Payment Hash: {payment.payment_hash}\n"
-            f"   - Amount: {payment.value} satoshis\n"
-            f"   - Status: {payment.status}\n"
-            f"   - Created: {payment.creation_date}"
-            for payment in response.payments
+        response = stub.ForwardingHistory(ForwardingHistoryRequest())
+        forwarding_info = "\n".join([
+            f"🔄 Forwarding Event:\n"
+            f"   - Channel In: {event.chan_id_in}\n"
+            f"   - Channel Out: {event.chan_id_out}\n"
+            f"   - Amount: {event.amt_in} satoshis\n"
+            f"   - Fee: {event.fee} satoshis\n"
+            f"   - Timestamp: {event.timestamp}"
+            for event in response.forwarding_events
         ])
-        await update.message.reply_text(f"🔄 Routing Transactions:\n{routing_info}")
+        await update.message.reply_text(f"🔄 Forwarding Transactions:\n{forwarding_info}")
     except grpc.RpcError as e:
-        logging.error(f"gRPC error while getting routing transactions: {e.details()}")
-        await update.message.reply_text(f"Errore nel recuperare le transazioni di routing: {e.details()}")
+        logging.error(f"gRPC error while getting forwarding transactions: {e.details()}")
+        await update.message.reply_text(f"Errore nel recuperare le transazioni di forwarding: {e.details()}")
 
 def monitor_onchain_transactions(application, loop):
     previous_tx_ids = set()
@@ -238,24 +240,47 @@ def monitor_lightning_invoices(application, loop):
             )
 
 def monitor_channels(application, loop):
-    previous_channels = None
+    previous_channels = {}
     while True:
         try:
             stub = get_ln_stub()
             response = stub.ListChannels(ListChannelsRequest())
             current_channels = {channel.chan_id: channel.active for channel in response.channels}
-            
-            if previous_channels is not None:
-                for chan_id, is_active in current_channels.items():
-                    if chan_id in previous_channels and previous_channels[chan_id] and not is_active:
-                        asyncio.run_coroutine_threadsafe(
-                            application.bot.send_message(
-                                chat_id=CHAT_ID,
-                                text=f"Channel with {chan_id} is now offline."
-                            ),
-                            loop
-                        )
-            
+
+            # Check for channels that have transitioned from offline to online
+            for chan_id, is_active in current_channels.items():
+                if chan_id in previous_channels and not previous_channels[chan_id] and is_active:
+                    asyncio.run_coroutine_threadsafe(
+                        application.bot.send_message(
+                            chat_id=CHAT_ID,
+                            text=f"Channel with {chan_id} is now online."
+                        ),
+                        loop
+                    )
+                elif chan_id not in previous_channels and is_active:
+                    # New channel found
+                    asyncio.run_coroutine_threadsafe(
+                        application.bot.send_message(
+                            chat_id=CHAT_ID,
+                            text=f"New channel with {chan_id} is online."
+                        ),
+                        loop
+                    )
+
+            # Check for channels that are offline
+            for chan_id, was_active in previous_channels.items():
+                if chan_id not in current_channels:
+                    # Channel was removed (e.g., closed or pruned)
+                    continue
+                if was_active and not current_channels[chan_id]:
+                    asyncio.run_coroutine_threadsafe(
+                        application.bot.send_message(
+                            chat_id=CHAT_ID,
+                            text=f"Channel with {chan_id} is now offline."
+                        ),
+                        loop
+                    )
+
             previous_channels = current_channels
             time.sleep(60)  # Check every 60 seconds
         except grpc.RpcError as e:
@@ -278,6 +303,50 @@ def monitor_channels(application, loop):
             )
         time.sleep(60)  # Check every 60 seconds
 
+def monitor_forwarding_events(application, loop):
+    previous_events = set()
+    while True:
+        try:
+            stub = get_ln_stub()
+            response = stub.ForwardingHistory(ForwardingHistoryRequest())
+            new_events = {event.timestamp for event in response.forwarding_events}
+
+            for event in response.forwarding_events:
+                if event.timestamp not in previous_events:
+                    asyncio.run_coroutine_threadsafe(
+                        application.bot.send_message(
+                            chat_id=CHAT_ID,
+                            text=f"🔄 New Forwarding Event:\n"
+                                 f"   - Channel In: {event.chan_id_in}\n"
+                                 f"   - Channel Out: {event.chan_id_out}\n"
+                                 f"   - Amount: {event.amt_in} satoshis\n"
+                                 f"   - Fee: {event.fee} satoshis\n"
+                                 f"   - Timestamp: {event.timestamp}"
+                        ),
+                        loop
+                    )
+
+            previous_events = new_events
+        except grpc.RpcError as e:
+            logging.error(f"gRPC error while monitoring forwarding events: {e.details()}")
+            asyncio.run_coroutine_threadsafe(
+                application.bot.send_message(
+                    chat_id=CHAT_ID,
+                    text=f"Errore nel monitoraggio degli eventi di forwarding: {e.details()}"
+                ),
+                loop
+            )
+        except Exception as e:
+            logging.error(f"Unexpected error while monitoring forwarding events: {e}")
+            asyncio.run_coroutine_threadsafe(
+                application.bot.send_message(
+                    chat_id=CHAT_ID,
+                    text=f"Errore imprevisto nel monitoraggio degli eventi di forwarding: {e}"
+                ),
+                loop
+            )
+        time.sleep(60)  # Check every 60 seconds
+
 def main():
     application = Application.builder().token(TELEGRAM_TOKEN).build()
     loop = asyncio.get_event_loop()
@@ -290,8 +359,10 @@ def main():
     Thread(target=monitor_onchain_transactions, args=(application, loop)).start()
     Thread(target=monitor_lightning_invoices, args=(application, loop)).start()
     Thread(target=monitor_channels, args=(application, loop)).start()
+    Thread(target=monitor_forwarding_events, args=(application, loop)).start()
 
     application.run_polling()
 
 if __name__ == "__main__":
     main()
+
