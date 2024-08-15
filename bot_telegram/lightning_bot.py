@@ -14,16 +14,16 @@ from lightning_pb2 import (
 )
 from lightning_pb2_grpc import LightningStub
 
-# Configura il token API di Telegram
+# Configure Telegram API token
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN', 'your_telegram_token')
 CHAT_ID = os.getenv('CHAT_ID', 'your_chat_id')
 
-# Configura il canale di comunicazione con LND su RaspiBlitz
-LND_DIR = '/opt/data/lnd/'
+# Configure communication with LND
+LND_DIR = '/path/to/lnd/'
 CERT_PATH = os.path.join(LND_DIR, 'tls.cert')
 MACAROON_PATH = os.path.join(LND_DIR, 'chain/bitcoin/mainnet/admin.macaroon')
 
-# Configura il logging
+# Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def get_macaroon_hex():
@@ -69,7 +69,7 @@ async def show_menu(update: Update):
         [InlineKeyboardButton("💸 Network Fees", callback_data='fees')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text('🤖 Bot attivo! Seleziona un\'opzione:', reply_markup=reply_markup)
+    await update.message.reply_text('🤖 Bot is active! Select an option:', reply_markup=reply_markup)
 
 async def button(update: Update, context):
     query = update.callback_query
@@ -103,41 +103,41 @@ async def get_node_info(update):
         # Get system info
         cpu_usage = psutil.cpu_percent()
         memory_info = psutil.virtual_memory()
-        disk_info = psutil.disk_usage('/opt')
+        disk_info = psutil.disk_usage('/')
         cpu_temperature = get_cpu_temperature()
         
         # Prepare the response message
         text = (f"⚡ Alias: {info_response.alias}\n"
-                f"🛠️ Versione: {info_response.version}\n"
-                f"🔢 Altezza Blocco: {info_response.block_height}\n"
-                f"💰 Saldo On-chain: {balance_response.total_balance} satoshis\n"
-                f"⚡ Saldo Lightning: {lightning_balance} satoshis\n"
-                f"🔗 Totale Canali: {len(channel_response.channels)}\n"
-                f"🖥️ Uso CPU: {cpu_usage}%\n"
-                f"🧠 Memoria Libera: {memory_info.available / (1024 ** 2):.2f} MB\n"
-                f"💾 Spazio Disco Libero: {disk_info.free / (1024 ** 3):.2f} GB\n"
-                f"🌡️ Temperatura CPU: {cpu_temperature}")
+                f"🛠️ Version: {info_response.version}\n"
+                f"🔢 Block Height: {info_response.block_height}\n"
+                f"💰 On-chain Balance: {balance_response.total_balance} satoshis\n"
+                f"⚡ Lightning Balance: {lightning_balance} satoshis\n"
+                f"🔗 Total Channels: {len(channel_response.channels)}\n"
+                f"🖥️ CPU Usage: {cpu_usage}%\n"
+                f"🧠 Free Memory: {memory_info.available / (1024 ** 2):.2f} MB\n"
+                f"💾 Free Disk Space: {disk_info.free / (1024 ** 3):.2f} GB\n"
+                f"🌡️ CPU Temperature: {cpu_temperature}")
                 
         await update.message.reply_text(text)
     except grpc.RpcError as e:
-        logging.error(f"Errore gRPC durante il recupero delle informazioni del nodo: {e.details()}")
-        await update.message.reply_text(f"Errore nel recuperare le informazioni del nodo: {e.details()}")
+        logging.error(f"gRPC error while retrieving node info: {e.details()}")
+        await update.message.reply_text(f"Error retrieving node info: {e.details()}")
 
 async def get_channel_info(update):
     try:
         stub = get_ln_stub()
         response = stub.ListChannels(ListChannelsRequest())
         channels_info = "\n".join([
-            f"📡 Canale con {channel.remote_pubkey}\n"
-            f"   - Capacità: {channel.capacity} satoshis\n"
-            f"   - Saldo Locale: {channel.local_balance} satoshis\n"
-            f"   - Saldo Remoto: {channel.remote_balance} satoshis"
+            f"📡 Channel with {channel.remote_pubkey}\n"
+            f"   - Capacity: {channel.capacity} satoshis\n"
+            f"   - Local Balance: {channel.local_balance} satoshis\n"
+            f"   - Remote Balance: {channel.remote_balance} satoshis"
             for channel in response.channels
         ])
-        await update.message.reply_text(f"📊 Canali:\n{channels_info}")
+        await update.message.reply_text(f"📊 Channels:\n{channels_info}")
     except grpc.RpcError as e:
-        logging.error(f"Errore gRPC durante il recupero delle informazioni sui canali: {e.details()}")
-        await update.message.reply_text(f"Errore nel recuperare le informazioni dei canali: {e.details()}")
+        logging.error(f"gRPC error while retrieving channel info: {e.details()}")
+        await update.message.reply_text(f"Error retrieving channel info: {e.details()}")
 
 async def get_recent_transactions(update):
     try:
@@ -153,43 +153,43 @@ async def get_recent_transactions(update):
 
         # Prepare on-chain transactions info
         onchain_transactions = "\n".join([
-            f"🔄 Transazione On-chain Hash: {tx.tx_hash}, Importo: {tx.amount} satoshis"
+            f"🔄 On-chain Transaction Hash: {tx.tx_hash}, Amount: {tx.amount} satoshis"
             for tx in recent_onchain
         ])
 
         # Prepare Lightning transactions info
         lightning_transactions = "\n".join([
-            f"⚡ Fattura Lightning: {invoice.memo}, Importo: {invoice.value} satoshis"
+            f"⚡ Lightning Invoice: {invoice.memo}, Amount: {invoice.value} satoshis"
             for invoice in recent_invoices
         ])
 
         # Prepare the response message
-        text = "Transazioni Recenti:\n"
+        text = "Recent Transactions:\n"
         text += onchain_transactions + "\n" if onchain_transactions else ""
         text += lightning_transactions + "\n" if lightning_transactions else ""
 
         await update.message.reply_text(text)
     except grpc.RpcError as e:
-        logging.error(f"Errore gRPC durante il recupero delle transazioni recenti: {e.details()}")
-        await update.message.reply_text(f"Errore nel recuperare le transazioni recenti: {e.details()}")
+        logging.error(f"gRPC error while retrieving recent transactions: {e.details()}")
+        await update.message.reply_text(f"Error retrieving recent transactions: {e.details()}")
 
 async def get_forwarding_transactions(update):
     try:
         stub = get_ln_stub()
         response = stub.ForwardingHistory(ForwardingHistoryRequest())
         forwarding_info = "\n".join([
-            f"🔄 Evento di Forwarding:\n"
-            f"   - Canale In: {event.chan_id_in}\n"
-            f"   - Canale Out: {event.chan_id_out}\n"
-            f"   - Importo: {event.amt_in} satoshis\n"
+            f"🔄 Forwarding Event:\n"
+            f"   - Channel In: {event.chan_id_in}\n"
+            f"   - Channel Out: {event.chan_id_out}\n"
+            f"   - Amount: {event.amt_in} satoshis\n"
             f"   - Fee: {event.fee} satoshis\n"
             f"   - Timestamp: {event.timestamp}"
             for event in response.forwarding_events
         ])
-        await update.message.reply_text(f"🔄 Transazioni di Forwarding:\n{forwarding_info}")
+        await update.message.reply_text(f"🔄 Forwarding Transactions:\n{forwarding_info}")
     except grpc.RpcError as e:
-        logging.error(f"Errore gRPC durante il recupero delle transazioni di forwarding: {e.details()}")
-        await update.message.reply_text(f"Errore nel recuperare le transazioni di forwarding: {e.details()}")
+        logging.error(f"gRPC error while retrieving forwarding transactions: {e.details()}")
+        await update.message.reply_text(f"Error retrieving forwarding transactions: {e.details()}")
 
 async def get_network_fees(update):
     try:
@@ -206,18 +206,18 @@ async def get_network_fees(update):
         min_fee_usd = min_fee_sats_per_vbyte * btc_to_usd / 1e8
         max_fee_usd = max_fee_sats_per_vbyte * btc_to_usd / 1e8
 
-        text = (f"💸 Fee di Rete:\n"
-                f"   - Fee Minima: {min_fee_sats_per_vbyte} sat/vbyte\n"
-                f"     - Equivalente in EUR: €{min_fee_eur:.2f}\n"
-                f"     - Equivalente in USD: ${min_fee_usd:.2f}\n"
-                f"   - Fee Massima: {max_fee_sats_per_vbyte} sat/vbyte\n"
-                f"     - Equivalente in EUR: €{max_fee_eur:.2f}\n"
-                f"     - Equivalente in USD: ${max_fee_usd:.2f}")
+        text = (f"💸 Network Fees:\n"
+                f"   - Minimum Fee: {min_fee_sats_per_vbyte} sat/vbyte\n"
+                f"     - Equivalent in EUR: €{min_fee_eur:.2f}\n"
+                f"     - Equivalent in USD: ${min_fee_usd:.2f}\n"
+                f"   - Maximum Fee: {max_fee_sats_per_vbyte} sat/vbyte\n"
+                f"     - Equivalent in EUR: €{max_fee_eur:.2f}\n"
+                f"     - Equivalent in USD: ${max_fee_usd:.2f}")
 
         await update.message.reply_text(text)
     except Exception as e:
-        logging.error(f"Errore durante il recupero delle fee di rete: {e}")
-        await update.message.reply_text(f"Errore nel recuperare le fee di rete: {e}")
+        logging.error(f"Error retrieving network fees: {e}")
+        await update.message.reply_text(f"Error retrieving network fees: {e}")
 
 def monitor_lightning_invoices(application, loop):
     stub = get_ln_stub()
@@ -228,7 +228,7 @@ def monitor_lightning_invoices(application, loop):
                 asyncio.run_coroutine_threadsafe(
                     application.bot.send_message(
                         chat_id=CHAT_ID,
-                        text=f"🔔 Fattura Lightning ricevuta: {invoice.amt_paid_sat} satoshis\nMemo: {invoice.memo}"
+                        text=f"🔔 Lightning Invoice Received: {invoice.amt_paid_sat} satoshis\nMemo: {invoice.memo}"
                     ),
                     loop
                 )
@@ -245,7 +245,7 @@ def monitor_lightning_transactions(application, loop):
                     asyncio.run_coroutine_threadsafe(
                         application.bot.send_message(
                             chat_id=CHAT_ID,
-                            text=f"🚀 Pagamento Lightning inviato: {payment.value} satoshis\nDestinatario: {payment.payee}"
+                            text=f"🚀 Lightning Payment Sent: {payment.value} satoshis\nRecipient: {payment.payee}"
                         ),
                         loop
                     )
@@ -253,20 +253,20 @@ def monitor_lightning_transactions(application, loop):
         
             time.sleep(60)  # Adjust as needed
         except grpc.RpcError as e:
-            logging.error(f"Errore gRPC durante il monitoraggio delle transazioni Lightning: {e.details()}")
+            logging.error(f"gRPC error while monitoring Lightning transactions: {e.details()}")
             asyncio.run_coroutine_threadsafe(
                 application.bot.send_message(
                     chat_id=CHAT_ID,
-                    text=f"⚠️ Errore nel monitoraggio delle transazioni Lightning: {e.details()}"
+                    text=f"⚠️ Error monitoring Lightning transactions: {e.details()}"
                 ),
                 loop
             )
         except Exception as e:
-            logging.error(f"Errore imprevisto durante il monitoraggio delle transazioni Lightning: {e}")
+            logging.error(f"Unexpected error while monitoring Lightning transactions: {e}")
             asyncio.run_coroutine_threadsafe(
                 application.bot.send_message(
                     chat_id=CHAT_ID,
-                    text=f"⚠️ Errore imprevisto nel monitoraggio delle transazioni Lightning: {e}"
+                    text=f"⚠️ Unexpected error monitoring Lightning transactions: {e}"
                 ),
                 loop
             )
@@ -283,7 +283,7 @@ def monitor_onchain_transactions(application, loop):
                     asyncio.run_coroutine_threadsafe(
                         application.bot.send_message(
                             chat_id=CHAT_ID,
-                            text=f"🔄 Transazione On-chain: {tx.tx_hash}\nImporto: {tx.amount} satoshis"
+                            text=f"🔄 On-chain Transaction: {tx.tx_hash}\nAmount: {tx.amount} satoshis"
                         ),
                         loop
                     )
@@ -291,20 +291,20 @@ def monitor_onchain_transactions(application, loop):
         
             time.sleep(60)  # Adjust as needed
         except grpc.RpcError as e:
-            logging.error(f"Errore gRPC durante il monitoraggio delle transazioni On-chain: {e.details()}")
+            logging.error(f"gRPC error while monitoring on-chain transactions: {e.details()}")
             asyncio.run_coroutine_threadsafe(
                 application.bot.send_message(
                     chat_id=CHAT_ID,
-                    text=f"⚠️ Errore nel monitoraggio delle transazioni On-chain: {e.details()}"
+                    text=f"⚠️ Error monitoring on-chain transactions: {e.details()}"
                 ),
                 loop
             )
         except Exception as e:
-            logging.error(f"Errore imprevisto durante il monitoraggio delle transazioni On-chain: {e}")
+            logging.error(f"Unexpected error while monitoring on-chain transactions: {e}")
             asyncio.run_coroutine_threadsafe(
                 application.bot.send_message(
                     chat_id=CHAT_ID,
-                    text=f"⚠️ Errore imprevisto nel monitoraggio delle transazioni On-chain: {e}"
+                    text=f"⚠️ Unexpected error monitoring on-chain transactions: {e}"
                 ),
                 loop
             )
@@ -321,7 +321,7 @@ def monitor_channels(application, loop):
                     asyncio.run_coroutine_threadsafe(
                         application.bot.send_message(
                             chat_id=CHAT_ID,
-                            text=f"📡 Nuovo canale: {channel.remote_pubkey}\nCapacità: {channel.capacity} satoshis"
+                            text=f"📡 New Channel: {channel.remote_pubkey}\nCapacity: {channel.capacity} satoshis"
                         ),
                         loop
                     )
@@ -329,20 +329,20 @@ def monitor_channels(application, loop):
         
             time.sleep(60)  # Adjust as needed
         except grpc.RpcError as e:
-            logging.error(f"Errore gRPC durante il monitoraggio dei canali: {e.details()}")
+            logging.error(f"gRPC error while monitoring channels: {e.details()}")
             asyncio.run_coroutine_threadsafe(
                 application.bot.send_message(
                     chat_id=CHAT_ID,
-                    text=f"⚠️ Errore nel monitoraggio dei canali: {e.details()}"
+                    text=f"⚠️ Error monitoring channels: {e.details()}"
                 ),
                 loop
             )
         except Exception as e:
-            logging.error(f"Errore imprevisto durante il monitoraggio dei canali: {e}")
+            logging.error(f"Unexpected error while monitoring channels: {e}")
             asyncio.run_coroutine_threadsafe(
                 application.bot.send_message(
                     chat_id=CHAT_ID,
-                    text=f"⚠️ Errore imprevisto nel monitoraggio dei canali: {e}"
+                    text=f"⚠️ Unexpected error monitoring channels: {e}"
                 ),
                 loop
             )
@@ -360,9 +360,9 @@ def monitor_forwarding_events(application, loop):
                         application.bot.send_message(
                             chat_id=CHAT_ID,
                             text=f"🔄 Forwarding Event:\n"
-                                 f"   - Canale In: {event.chan_id_in}\n"
-                                 f"   - Canale Out: {event.chan_id_out}\n"
-                                 f"   - Importo: {event.amt_in} satoshis\n"
+                                 f"   - Channel In: {event.chan_id_in}\n"
+                                 f"   - Channel Out: {event.chan_id_out}\n"
+                                 f"   - Amount: {event.amt_in} satoshis\n"
                                  f"   - Fee: {event.fee} satoshis\n"
                                  f"   - Timestamp: {event.timestamp}"
                         ),
@@ -372,20 +372,20 @@ def monitor_forwarding_events(application, loop):
         
             time.sleep(60)  # Adjust as needed
         except grpc.RpcError as e:
-            logging.error(f"Errore gRPC durante il monitoraggio degli eventi di forwarding: {e.details()}")
+            logging.error(f"gRPC error while monitoring forwarding events: {e.details()}")
             asyncio.run_coroutine_threadsafe(
                 application.bot.send_message(
                     chat_id=CHAT_ID,
-                    text=f"⚠️ Errore nel monitoraggio degli eventi di forwarding: {e.details()}"
+                    text=f"⚠️ Error monitoring forwarding events: {e.details()}"
                 ),
                 loop
             )
         except Exception as e:
-            logging.error(f"Errore imprevisto durante il monitoraggio degli eventi di forwarding: {e}")
+            logging.error(f"Unexpected error while monitoring forwarding events: {e}")
             asyncio.run_coroutine_threadsafe(
                 application.bot.send_message(
                     chat_id=CHAT_ID,
-                    text=f"⚠️ Errore imprevisto nel monitoraggio degli eventi di forwarding: {e}"
+                    text=f"⚠️ Unexpected error monitoring forwarding events: {e}"
                 ),
                 loop
             )
