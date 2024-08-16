@@ -1,126 +1,116 @@
-# Lightning Node Telegram Bot
 
-## Description
+# Telegram Bot for Lightning Network Monitoring
 
-This Telegram bot interacts with a Lightning Network (LND) node to provide detailed information and monitor various activities. It uses gRPC for communication with LND and the `python-telegram-bot` library for interaction with Telegram.
+## Overview
+
+This Telegram bot provides real-time monitoring and interaction with the Lightning Network (LN) and Bitcoin blockchain. It offers functionalities such as node information, channel details, recent transactions, forwarding events, and Bitcoin price updates.
 
 ## Features
 
-- Displays node information, including balances and channel status.
-- Shows Lightning channel information.
-- Retrieves and displays recent transactions (both on-chain and Lightning).
-- Shows forwarding events and network fee information.
-- Monitors real-time Lightning invoices, transactions, and channel status.
+- **Node Info**: Displays detailed node information including CPU usage, memory, disk space, and CPU temperature.
+- **Channel Info**: Provides information about each Lightning channel, including capacity and balances.
+- **Recent Transactions**: Lists recent on-chain and Lightning transactions with timestamps.
+- **Forwarding Transactions**: Shows recent forwarding events with detailed information.
+- **Bitcoin Info**: Displays Bitcoin price and network fee estimates in USD and EUR.
 
-## Dependencies
+## Requirements
 
-- `grpcio` and `grpcio-tools` for gRPC communication.
-- `python-telegram-bot` for interacting with the Telegram API.
-- `psutil` for system resource monitoring.
-- `requests` for external API calls.
-- `protobuf` for managing `.proto` files.
+- Python 3.8+
+- `grpcio` and `grpcio-tools`
+- `python-telegram-bot`
+- `psutil`
+- `requests`
 
 ## Installation
 
-1. **Clone the Repository**
+1. **Clone the Repository:**
 
-    ```bash
-    git clone https://github.com/asyscom/lightning_bot.git
-    cd lightning_bot
-    ```
+   ```bash
+   git clone https://github.com/yourusername/yourrepository.git
+   cd yourrepository
+   ```
 
-2. **Install Dependencies**
+2. **Install Dependencies:**
 
-    Create a virtual environment (optional but recommended):
+   Ensure you have `pip` installed. Then install the required Python packages:
 
-    ```bash
-    python -m venv venv
-    source venv/bin/activate  # On Windows use `venv\Scripts\activate`
-    ```
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-    Install the dependencies:
+   Alternatively, you can manually install the dependencies:
 
-    ```bash
-    pip install -r requirements.txt
-    ```
+   ```bash
+   pip install grpcio grpcio-tools python-telegram-bot psutil requests
+   ```
 
-## Configuration
+3. **Configure Environment Variables:**
 
-1. **Environment Variables**
+   Set up the following environment variables:
 
-    Configure the following environment variables:
+   - `TELEGRAM_TOKEN`: Your Telegram Bot API token.
+   - `CHAT_ID`: The chat ID where the bot sends notifications.
+   - `LND_DIR`: Path to the LND directory.
 
-    - `TELEGRAM_TOKEN`: The Telegram bot API token.
-    - `CHAT_ID`: The Telegram chat ID to send messages to.
-    - `LND_DIR`: Directory of LND data. Ensure it contains the `tls.cert` and `admin.macaroon` files.
+   You can set these in your `.env` file or export them directly in your terminal session:
 
-    You can create a `.env` file to manage these variables:
+   ```bash
+   export TELEGRAM_TOKEN="your_telegram_bot_token"
+   export CHAT_ID="your_chat_id"
+   export LND_DIR="/path/to/lnd"
+   ```
 
-    ```env
-    TELEGRAM_TOKEN=your_telegram_token
-    CHAT_ID=your_chat_id
-    LND_DIR=/opt/data/lnd/
-    ```
+4. **Setup gRPC:**
 
-2. **.proto Files**
+   Ensure your gRPC setup for the Lightning Network Daemon (LND) is correctly configured. Place the `tls.cert` and `admin.macaroon` files in the specified `LND_DIR`.
 
-    Ensure you have the necessary `.proto` files for your project. The files are included in the `lightning_pb2.py` and `lightning_pb2_grpc.py` directories, generated using the `protoc` compiler. If you don't have these files, generate them with the following steps:
+## Usage
 
-    - Install `protoc`:
-    
-      ```bash
-      sudo apt-get install protobuf-compiler
-      ```
+1. **Run the Bot:**
 
-    - Compile the `.proto` files:
+   Start the bot with the following command:
 
-      ```bash
-      protoc --python_out=. --grpc_python_out=. lightning.proto
-      ```
+   ```bash
+   python bot.py
+   ```
 
-## Running the Bot
+   Ensure that you have set up the monitoring threads to handle different aspects like transactions, invoices, channels, and forwarding events.
 
-Run the bot with the command:
+2. **Interact with the Bot:**
 
-```bash
-python bot.py
-```
+   - **/start**: Displays the main menu with options to view node info, channel info, recent transactions, forwarding transactions, and Bitcoin info.
+   - **/menu**: Shows the main menu again.
 
-## Commands
+   Use the buttons provided in the Telegram chat to interact with the bot and get the relevant information.
 
-- `/start`: Starts the bot and shows the main menu.
-- `/menu`: Shows the main menu.
+## Monitoring Functions
 
-The bot also handles the following inline keyboard callbacks:
+- **On-Chain Transactions**: Monitors and notifies about new on-chain transactions.
+- **Lightning Invoices**: Tracks and notifies about new settled Lightning invoices.
+- **Channels**: Monitors channel statuses and notifies about online/offline changes.
+- **Forwarding Events**: Monitors and notifies about new forwarding events.
 
-- **⚡ Node Info**: Displays node information.
-- **📊 Channel Info**: Displays channel information.
-- **🔄 Recent Transactions**: Displays recent transactions.
-- **🔄 Forwarding Transactions**: Displays forwarding events.
-- **💸 Network Fees**: Displays network fee information.
+## Error Handling
 
-## Monitoring
+The bot includes error handling for:
 
-The bot runs the following monitoring threads to track real-time activities:
+- gRPC errors
+- API request failures
+- Unexpected exceptions
 
-- **On-chain transactions monitoring**
-- **Lightning invoices monitoring**
-- **Lightning transactions monitoring**
-- **Channel monitoring**
-- **Forwarding events monitoring**
-
-## Debugging and Logging
-
-Logs are configured to record errors and other relevant information. Logs are output to the console and can be viewed for debugging purposes.
+Logs are generated to help diagnose issues. Review the logs for more detailed error information.
 
 ## Contributing
 
-If you want to contribute to this project, feel free to submit a pull request. Make sure to test your changes and update the documentation as necessary.
+Contributions are welcome! Please submit a pull request or open an issue to report bugs or suggest features.
 
 ## License
 
-This project is licensed under the MIT License. See the `LICENSE` file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
----
+## Contact
 
-Feel free to adapt the details to your specific requirements and configurations. If you have any further questions or need additional clarification, don’t hesitate to ask!
+For questions or support, please contact:
+
+- **Author:** Your DavideBTC
+- **Email:** davrago@proton.me
