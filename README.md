@@ -127,6 +127,6 @@ You can send Bitcoin directly to the following address:
 ### Donate via Lightning Network
 For faster and lower-fee donations, you can use the Lightning Network:
 
-**`asyscom@sats.mobi**
+**asyscom@sats.mobi**
 
 Thank you for your support!
